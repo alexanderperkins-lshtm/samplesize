@@ -10,7 +10,9 @@ params:
 ```{r, echo = FALSE}
 # Summary of conditions used
 cat("Conditions Used:\n")
-print(params$conditions)
+for (condition in names(params$conditions)) {
+  cat(condition, ":", params$conditions[[condition]], "\n")
+}
 
 # Sample Size Table
 cat("\nSample Size Table:\n")
