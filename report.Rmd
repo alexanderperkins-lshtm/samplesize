@@ -4,10 +4,19 @@ output: html_document
 params:
   sample_size_table: NULL
   cluster_table: NULL
+  conditions: NULL
 ---
 
-```{r}
-# Use the parameters passed from the Shiny app
+```{r, echo = FALSE}
+# Summary of conditions used
+cat("Conditions Used:\n")
+print(params$conditions)
+
+# Sample Size Table
+cat("\nSample Size Table:\n")
 print(params$sample_size_table)
+
+# Cluster Table
+cat("\nCluster Table:\n")
 print(params$cluster_table)
 ```
