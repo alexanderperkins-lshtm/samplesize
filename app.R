@@ -1,4 +1,5 @@
 library(shiny)
+setwd("/Users/alexanderperkins/Library/CloudStorage/OneDrive-LondonSchoolofHygieneandTropicalMedicine/samplesize")
 
 # Define UI for the app
 ui <- fluidPage(
@@ -35,6 +36,8 @@ ui <- fluidPage(
       tableOutput("sample_size_table"),
       h3("Number of Clusters Table"),
       tableOutput("cluster_table"),
+      h3("Rounded Sample Size Table"),
+      tableOutput("rounded_table"),
       downloadButton("download_table", "Download CSV Table")
     )
   )
@@ -62,10 +65,13 @@ server <- function(input, output) {
 
     sample_size_table <- matrix(nrow = length(effect_sizes), ncol = length(event_rates))
     cluster_table <- matrix(nrow = length(effect_sizes), ncol = length(event_rates))
+    rounded_table <- matrix(nrow = length(effect_sizes), ncol = length(event_rates))
     rownames(sample_size_table) <- paste("Effect Size:", effect_sizes)
     colnames(sample_size_table) <- paste("Event Rate:", event_rates)
     rownames(cluster_table) <- paste("Effect Size:", effect_sizes)
     colnames(cluster_table) <- paste("Event Rate:", event_rates)
+    rownames(rounded_table) <- paste("Effect Size:", effect_sizes)
+    colnames(rounded_table) <- paste("Event Rate:", event_rates)
 
     for (i in seq_along(effect_sizes)) {
       for (j in seq_along(event_rates)) {
@@ -73,6 +79,9 @@ server <- function(input, output) {
         adjusted_sample_size <- ceiling(base_sample_size * (1 + input$loss_cat / 100))
         sample_size_table[i, j] <- adjusted_sample_size
         cluster_table[i, j] <- ceiling(adjusted_sample_size / input$cluster_size_cat)
+        rounded_table[i, j] <- ifelse(input$cluster_size_cat > 0, 
+                                      ceiling(adjusted_sample_size / input$cluster_size_cat) * input$cluster_size_cat, 
+                                      NA)
       }
     }
 
@@ -84,12 +93,17 @@ server <- function(input, output) {
       cluster_table
     }, rownames = TRUE)
 
+    output$rounded_table <- renderTable({
+      rounded_table
+    }, rownames = TRUE)
+
     output$download_table <- downloadHandler(
       filename = function() {
         "sample_size_and_clusters.csv"
       },
       content = function(file) {
-        combined_table <- cbind(Sample_Size = sample_size_table, Number_of_Clusters = cluster_table)
+        combined_table <- cbind(Sample_Size = sample_size_table, Number_of_Clusters = cluster_table, Rounded_Sample_Size = rounded_table)
+        combined_table <- rbind(combined_table, Note = "Figures are for a two-arm trial with adjustments included.")
         write.csv(combined_table, file, row.names = TRUE)
       }
     )
@@ -129,6 +143,7 @@ server <- function(input, output) {
       },
       content = function(file) {
         combined_table <- cbind(Sample_Size = sample_size_table, Number_of_Clusters = cluster_table)
+        combined_table <- rbind(combined_table, Note = "Figures are for a two-arm trial with adjustments included.")
         write.csv(combined_table, file, row.names = TRUE)
       }
     )
