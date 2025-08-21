@@ -4,9 +4,9 @@ library(shiny)
 ui <- fluidPage(
   titlePanel("Sample Size Calculation for Cluster RCTs"),
   div(
-    p("This application helps calculate sample sizes and the number of clusters required for cluster randomized controlled trials (cRCTs).
+    p("This application helps calculate sample sizes and the number of clusters required for cluster randomized controlled trials (cRCTs) using ICC and cluster size to account for the clustering effect.
 
-    The output shows the total sample size for a two-arm trial including the sample size per arm and the number of clusters needed. The rounded table shows how many participants will be need to have an equal number of clusters in each arm.")
+    The output shows the total sample size for a two-arm trial including the sample size per arm and the number of clusters needed.")
   ),
 
   sidebarLayout(
@@ -39,9 +39,7 @@ ui <- fluidPage(
       h3("Sample Size Table"),
       tableOutput("sample_size_table"),
       h3("Number of Clusters Table"),
-      tableOutput("cluster_table"),
-      h3("Rounded Sample Size Table"),
-      tableOutput("rounded_table")
+      tableOutput("cluster_table")
     )
   )
 )
@@ -68,13 +66,10 @@ server <- function(input, output) {
 
     sample_size_table <- matrix(nrow = length(effect_sizes), ncol = length(event_rates))
     cluster_table <- matrix(nrow = length(effect_sizes), ncol = length(event_rates))
-    rounded_table <- matrix(nrow = length(effect_sizes), ncol = length(event_rates))
     rownames(sample_size_table) <- paste("Effect Size:", effect_sizes)
     colnames(sample_size_table) <- paste("Event Rate:", event_rates)
     rownames(cluster_table) <- paste("Effect Size:", effect_sizes)
     colnames(cluster_table) <- paste("Event Rate:", event_rates)
-    rownames(rounded_table) <- paste("Effect Size:", effect_sizes)
-    colnames(rounded_table) <- paste("Event Rate:", event_rates)
 
     for (i in seq_along(effect_sizes)) {
       for (j in seq_along(event_rates)) {
@@ -82,11 +77,6 @@ server <- function(input, output) {
         adjusted_sample_size <- ceiling(base_sample_size * (1 + input$loss_cat / 100))
         sample_size_table[i, j] <- adjusted_sample_size
         cluster_table[i, j] <- ceiling(adjusted_sample_size / input$cluster_size_cat)
-        rounded_table[i, j] <- if (!is.na(adjusted_sample_size) && input$cluster_size_cat > 0) {
-          ceiling(adjusted_sample_size / input$cluster_size_cat) * input$cluster_size_cat
-        } else {
-          NA
-        }
       }
     }
 
@@ -96,10 +86,6 @@ server <- function(input, output) {
 
     output$cluster_table <- renderTable({
       cluster_table
-    }, rownames = TRUE)
-
-    output$rounded_table <- renderTable({
-      rounded_table
     }, rownames = TRUE)
   })
 
