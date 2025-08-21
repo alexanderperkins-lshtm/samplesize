@@ -5,11 +5,13 @@ params:
   sample_size_table: NULL
   cluster_table: NULL
   conditions: NULL
+  calculation_type: NULL
 ---
 
 ```{r, echo = FALSE}
 # Summary of conditions used
-cat("Conditions Used:\n")
+cat("Calculation Type: ", params$calculation_type, "\n\n")
+cat("User Entered Variables:\n")
 for (condition in names(params$conditions)) {
   cat(condition, ":", params$conditions[[condition]], "\n")
 }

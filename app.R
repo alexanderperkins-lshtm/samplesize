@@ -5,9 +5,9 @@ library(rmarkdown)
 ui <- fluidPage(
   titlePanel("Sample Size Calculation for Cluster RCTs"),
   div(
-    p("This application helps calculate sample sizes and the number of clusters required for cluster randomized controlled trials (cRCTs).
+    p("This application calculates a range of sample sizes for proportional (based on effect size and event rate) or continuous (based on mean difference and standard deviation) variables for a cluster RCT. For ease, it also calculates the corresponding number of clusters required.
 
-    The output shows the total sample size for a two-arm trial including the sample size per arm and the number of clusters needed.")
+    The output shows the total sample size for a two-arm trial and includes the loss to follow-up and clustering adjustments.")
   ),
 
   sidebarLayout(
@@ -95,9 +95,33 @@ server <- function(input, output) {
         paste("sample_size_report", Sys.Date(), ".html", sep = "")
       },
       content = function(file) {
+        conditions <- if (input$calculate_cat > 0) {
+          list(
+            effect_sizes = input$effect_sizes,
+            event_rates = input$event_rates,
+            cluster_size_cat = input$cluster_size_cat,
+            icc_cat = input$icc_cat,
+            alpha_cat = input$alpha_cat,
+            power_cat = input$power_cat,
+            loss_cat = input$loss_cat
+          )
+        } else {
+          list(
+            mean_diff_range = input$mean_diff_range,
+            sd_range = input$sd_range,
+            cluster_size_cont = input$cluster_size_cont,
+            icc_cont = input$icc_cont,
+            alpha_cont = input$alpha_cont,
+            power_cont = input$power_cont,
+            loss_cont = input$loss_cont
+          )
+        }
+
         rmarkdown::render("report.Rmd", output_file = file, params = list(
           sample_size_table = sample_size_table,
-          cluster_table = cluster_table
+          cluster_table = cluster_table,
+          conditions = conditions,
+          calculation_type = if (input$calculate_cat > 0) "Proportional" else "Continuous"
         ))
       }
     )
@@ -136,9 +160,33 @@ server <- function(input, output) {
         paste("sample_size_report", Sys.Date(), ".html", sep = "")
       },
       content = function(file) {
+        conditions <- if (input$calculate_cat > 0) {
+          list(
+            effect_sizes = input$effect_sizes,
+            event_rates = input$event_rates,
+            cluster_size_cat = input$cluster_size_cat,
+            icc_cat = input$icc_cat,
+            alpha_cat = input$alpha_cat,
+            power_cat = input$power_cat,
+            loss_cat = input$loss_cat
+          )
+        } else {
+          list(
+            mean_diff_range = input$mean_diff_range,
+            sd_range = input$sd_range,
+            cluster_size_cont = input$cluster_size_cont,
+            icc_cont = input$icc_cont,
+            alpha_cont = input$alpha_cont,
+            power_cont = input$power_cont,
+            loss_cont = input$loss_cont
+          )
+        }
+
         rmarkdown::render("report.Rmd", output_file = file, params = list(
           sample_size_table = sample_size_table,
-          cluster_table = cluster_table
+          cluster_table = cluster_table,
+          conditions = conditions,
+          calculation_type = if (input$calculate_cat > 0) "Proportional" else "Continuous"
         ))
       }
     )

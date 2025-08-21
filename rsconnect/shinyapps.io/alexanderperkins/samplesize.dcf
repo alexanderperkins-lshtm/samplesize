@@ -5,6 +5,6 @@ account: alexanderperkins
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 15242081
-bundleId: 10801776
+bundleId: 10802907
 url: https://alexanderperkins.shinyapps.io/samplesize/
 version: 1
