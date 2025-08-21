@@ -1,10 +1,11 @@
 library(shiny)
+library(rmarkdown)
 
 # Define UI for the app
 ui <- fluidPage(
   titlePanel("Sample Size Calculation for Cluster RCTs"),
   div(
-    p("This application helps calculate sample sizes and the number of clusters required for cluster randomized controlled trials (cRCTs) using ICC and cluster size to account for the clustering effect.
+    p("This application helps calculate sample sizes and the number of clusters required for cluster randomized controlled trials (cRCTs).
 
     The output shows the total sample size for a two-arm trial including the sample size per arm and the number of clusters needed.")
   ),
@@ -39,7 +40,8 @@ ui <- fluidPage(
       h3("Sample Size Table"),
       tableOutput("sample_size_table"),
       h3("Number of Clusters Table"),
-      tableOutput("cluster_table")
+      tableOutput("cluster_table"),
+      downloadButton("download_report", "Download Report")
     )
   )
 )
@@ -87,6 +89,18 @@ server <- function(input, output) {
     output$cluster_table <- renderTable({
       cluster_table
     }, rownames = TRUE)
+
+    output$download_report <- downloadHandler(
+      filename = function() {
+        paste("sample_size_report", Sys.Date(), ".html", sep = "")
+      },
+      content = function(file) {
+        rmarkdown::render("report.Rmd", output_file = file, params = list(
+          sample_size_table = sample_size_table,
+          cluster_table = cluster_table
+        ))
+      }
+    )
   })
 
   observeEvent(input$calculate_cont, {
@@ -116,6 +130,18 @@ server <- function(input, output) {
     output$cluster_table <- renderTable({
       cluster_table
     }, rownames = TRUE)
+
+    output$download_report <- downloadHandler(
+      filename = function() {
+        paste("sample_size_report", Sys.Date(), ".html", sep = "")
+      },
+      content = function(file) {
+        rmarkdown::render("report.Rmd", output_file = file, params = list(
+          sample_size_table = sample_size_table,
+          cluster_table = cluster_table
+        ))
+      }
+    )
   })
 }
 

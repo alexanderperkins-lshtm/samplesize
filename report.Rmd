@@ -1,0 +1,13 @@
+---
+title: "Sample Size Report"
+output: html_document
+params:
+  sample_size_table: NULL
+  cluster_table: NULL
+---
+
+```{r}
+# Use the parameters passed from the Shiny app
+print(params$sample_size_table)
+print(params$cluster_table)
+```
