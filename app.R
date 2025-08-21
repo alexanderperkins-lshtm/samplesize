@@ -3,6 +3,11 @@ library(shiny)
 # Define UI for the app
 ui <- fluidPage(
   titlePanel("Sample Size Calculation for Cluster RCTs"),
+  div(
+    p("This application helps calculate sample sizes and the number of clusters required for cluster randomized controlled trials (cRCTs).
+
+    The output shows the total sample size for a two-arm trial including the sample size per arm and the number of clusters needed. The rounded table shows how many participants will be need to have an equal number of clusters in each arm.")
+  ),
 
   sidebarLayout(
     sidebarPanel(
@@ -21,7 +26,7 @@ ui <- fluidPage(
           textInput("mean_diff_range", "Enter range of mean differences (e.g., 5,10):", "5,10"),
           textInput("sd_range", "Enter range of standard deviations (e.g., 10,15):", "10,15"),
           numericInput("cluster_size_cont", "Enter cluster size:", value = 10, min = 1),
-          numericInput("icc_cont", "Enter intra-cluster correlation coefficient (ICC):", value = 0.01, min = 0, max = 1),
+          numericInput("icc_cont", "Enter intra-cluster correlation coefficient (ICC):", value = 0.05, min = 0, max = 1),
           numericInput("alpha_cont", "Enter significance level (alpha):", value = 0.05, min = 0, max = 1),
           numericInput("power_cont", "Enter power (1-beta):", value = 0.8, min = 0, max = 1),
           numericInput("loss_cont", "Enter expected loss to follow-up (%):", value = 10, min = 0, max = 100),
@@ -36,8 +41,7 @@ ui <- fluidPage(
       h3("Number of Clusters Table"),
       tableOutput("cluster_table"),
       h3("Rounded Sample Size Table"),
-      tableOutput("rounded_table"),
-      downloadButton("download_table", "Download CSV Table")
+      tableOutput("rounded_table")
     )
   )
 )
@@ -95,17 +99,6 @@ server <- function(input, output) {
     output$rounded_table <- renderTable({
       rounded_table
     }, rownames = TRUE)
-
-    output$download_table <- downloadHandler(
-      filename = function() {
-        "sample_size_and_clusters.csv"
-      },
-      content = function(file) {
-        combined_table <- cbind(Sample_Size = sample_size_table, Number_of_Clusters = cluster_table, Rounded_Sample_Size = rounded_table)
-        combined_table <- rbind(combined_table, Note = "Figures are for a two-arm trial with adjustments included.")
-        write.csv(combined_table, file, row.names = TRUE)
-      }
-    )
   })
 
   observeEvent(input$calculate_cont, {
@@ -135,17 +128,6 @@ server <- function(input, output) {
     output$cluster_table <- renderTable({
       cluster_table
     }, rownames = TRUE)
-
-    output$download_table <- downloadHandler(
-      filename = function() {
-        "sample_size_and_clusters.csv"
-      },
-      content = function(file) {
-        combined_table <- cbind(Sample_Size = sample_size_table, Number_of_Clusters = cluster_table)
-        combined_table <- rbind(combined_table, Note = "Figures are for a two-arm trial with adjustments included.")
-        write.csv(combined_table, file, row.names = TRUE)
-      }
-    )
   })
 }
 
