@@ -1,5 +1,4 @@
 library(shiny)
-setwd("/Users/alexanderperkins/Library/CloudStorage/OneDrive-LondonSchoolofHygieneandTropicalMedicine/samplesize")
 
 # Define UI for the app
 ui <- fluidPage(
