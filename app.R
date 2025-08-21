@@ -82,9 +82,11 @@ server <- function(input, output) {
         adjusted_sample_size <- ceiling(base_sample_size * (1 + input$loss_cat / 100))
         sample_size_table[i, j] <- adjusted_sample_size
         cluster_table[i, j] <- ceiling(adjusted_sample_size / input$cluster_size_cat)
-        rounded_table[i, j] <- ifelse(input$cluster_size_cat > 0, 
-                                      ceiling(adjusted_sample_size / input$cluster_size_cat) * input$cluster_size_cat, 
-                                      NA)
+        rounded_table[i, j] <- if (!is.na(adjusted_sample_size) && input$cluster_size_cat > 0) {
+          ceiling(adjusted_sample_size / input$cluster_size_cat) * input$cluster_size_cat
+        } else {
+          NA
+        }
       }
     }
 
