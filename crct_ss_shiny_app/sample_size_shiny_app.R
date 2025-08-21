@@ -86,10 +86,10 @@ server <- function(input, output) {
 
     output$download_table <- downloadHandler(
       filename = function() {
-        "sample_size_table_with_clusters.csv"
+        "sample_size_and_clusters.csv"
       },
       content = function(file) {
-        combined_table <- cbind(SampleSize = sample_size_table, Clusters = cluster_table)
+        combined_table <- cbind(Sample_Size = sample_size_table, Number_of_Clusters = cluster_table)
         write.csv(combined_table, file, row.names = TRUE)
       }
     )
@@ -125,10 +125,10 @@ server <- function(input, output) {
 
     output$download_table <- downloadHandler(
       filename = function() {
-        "sample_size_table_with_clusters.csv"
+        "sample_size_and_clusters.csv"
       },
       content = function(file) {
-        combined_table <- cbind(SampleSize = sample_size_table, Clusters = cluster_table)
+        combined_table <- cbind(Sample_Size = sample_size_table, Number_of_Clusters = cluster_table)
         write.csv(combined_table, file, row.names = TRUE)
       }
     )
