@@ -7,7 +7,7 @@ ui <- fluidPage(
   div(
     p("This application calculates a range of sample sizes for proportional (based on effect size and event rate) or continuous (based on mean difference and standard deviation) outcomes for a cluster RCT. For ease, it also calculates the corresponding number of clusters required.
 
-    The output shows the total sample size for a two-arm trial and includes the loss to follow-up and clustering adjustments. For questions or comments, please contact Alexander.Perkins@LSHTM.ac.uk.")
+    The output shows the total sample size for a two-arm trial and includes the loss to follow-up and clustering adjustments. For questions or comments, please contact Alexander.Perkins@LSHTM.ac.uk. Figures are advisory and should be checked with a qualified statistician before use. No responsibility is taken for their use.")
   ),
 
   sidebarLayout(
@@ -77,8 +77,8 @@ server <- function(input, output) {
       for (j in seq_along(event_rates)) {
         base_sample_size <- 2 * calculate_sample_size(effect_sizes[i], event_rates[j], input$cluster_size_cat, input$icc_cat, input$alpha_cat, input$power_cat)
         adjusted_sample_size <- ceiling(base_sample_size / (1 - input$loss_cat / 100))
-        sample_size_table[i, j] <- adjusted_sample_size
-        cluster_table[i, j] <- ceiling(adjusted_sample_size / input$cluster_size_cat)
+        sample_size_table[i, j] <- as.integer(adjusted_sample_size)
+        cluster_table[i, j] <- as.integer(adjusted_sample_size / input$cluster_size_cat)
       }
     }
 
@@ -97,27 +97,27 @@ server <- function(input, output) {
       content = function(file) {
         conditions <- if (input$calculate_cat > 0) {
           list(
-            effect_sizes = input$effect_sizes,
-            event_rates = input$event_rates,
-            cluster_size_cat = input$cluster_size_cat,
-            icc_cat = input$icc_cat,
-            alpha_cat = input$alpha_cat,
-            power_cat = input$power_cat,
-            loss_cat = input$loss_cat
+            "Effect Sizes" = input$effect_sizes,
+            "Event Rates" = input$event_rates,
+            "Cluster Size" = input$cluster_size_cat,
+            "Intra-cluster Correlation Coefficient (ICC)" = input$icc_cat,
+            "Significance Level (Alpha)" = input$alpha_cat,
+            "Power (1-Beta)" = input$power_cat,
+            "Loss to Follow-up (%)" = input$loss_cat
           )
         } else {
           list(
-            mean_diff_range = input$mean_diff_range,
-            sd_range = input$sd_range,
-            cluster_size_cont = input$cluster_size_cont,
-            icc_cont = input$icc_cont,
-            alpha_cont = input$alpha_cont,
-            power_cont = input$power_cont,
-            loss_cont = input$loss_cont
+            "Mean Difference Range" = input$mean_diff_range,
+            "Standard Deviation Range" = input$sd_range,
+            "Cluster Size" = input$cluster_size_cont,
+            "Intra-cluster Correlation Coefficient (ICC)" = input$icc_cont,
+            "Significance Level (Alpha)" = input$alpha_cont,
+            "Power (1-Beta)" = input$power_cont,
+            "Loss to Follow-up (%)" = input$loss_cont
           )
         }
 
-        rmarkdown::render("report.Rmd", output_file = file, params = list(
+        rmarkdown::render("report.Rmd", output_file = file, output_format = "html_document", params = list(
           sample_size_table = sample_size_table,
           cluster_table = cluster_table,
           conditions = conditions,
@@ -142,8 +142,8 @@ server <- function(input, output) {
       for (j in seq_along(sds)) {
         base_sample_size <- 2 * calculate_sample_size_continuous(mean_diffs[i], sds[j], input$cluster_size_cont, input$icc_cont, input$alpha_cont, input$power_cont)
         adjusted_sample_size <- ceiling(base_sample_size / (1 - input$loss_cont / 100))
-        sample_size_table[i, j] <- adjusted_sample_size
-        cluster_table[i, j] <- ceiling(adjusted_sample_size / input$cluster_size_cont)
+        sample_size_table[i, j] <- as.integer(adjusted_sample_size)
+        cluster_table[i, j] <- as.integer(adjusted_sample_size / input$cluster_size_cont)
       }
     }
 
@@ -162,27 +162,27 @@ server <- function(input, output) {
       content = function(file) {
         conditions <- if (input$calculate_cat > 0) {
           list(
-            effect_sizes = input$effect_sizes,
-            event_rates = input$event_rates,
-            cluster_size_cat = input$cluster_size_cat,
-            icc_cat = input$icc_cat,
-            alpha_cat = input$alpha_cat,
-            power_cat = input$power_cat,
-            loss_cat = input$loss_cat
+            "Effect Sizes" = input$effect_sizes,
+            "Event Rates" = input$event_rates,
+            "Cluster Size" = input$cluster_size_cat,
+            "Intra-cluster Correlation Coefficient (ICC)" = input$icc_cat,
+            "Significance Level (Alpha)" = input$alpha_cat,
+            "Power (1-Beta)" = input$power_cat,
+            "Loss to Follow-up (%)" = input$loss_cat
           )
         } else {
           list(
-            mean_diff_range = input$mean_diff_range,
-            sd_range = input$sd_range,
-            cluster_size_cont = input$cluster_size_cont,
-            icc_cont = input$icc_cont,
-            alpha_cont = input$alpha_cont,
-            power_cont = input$power_cont,
-            loss_cont = input$loss_cont
+            "Mean Difference Range" = input$mean_diff_range,
+            "Standard Deviation Range" = input$sd_range,
+            "Cluster Size" = input$cluster_size_cont,
+            "Intra-cluster Correlation Coefficient (ICC)" = input$icc_cont,
+            "Significance Level (Alpha)" = input$alpha_cont,
+            "Power (1-Beta)" = input$power_cont,
+            "Loss to Follow-up (%)" = input$loss_cont
           )
         }
 
-        rmarkdown::render("report.Rmd", output_file = file, params = list(
+        rmarkdown::render("report.Rmd", output_file = file, output_format = "html_document", params = list(
           sample_size_table = sample_size_table,
           cluster_table = cluster_table,
           conditions = conditions,

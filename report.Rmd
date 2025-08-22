@@ -14,6 +14,8 @@ The sample size and cluster numbers presented are for a two-arm trial.
 
 Contact Alexander.Perkins@LSHTM.ac.uk for questions or comments.
 
+Figures are advisory and should be checked with a qualified statistician before use. No responsibility is taken for their use.
+
 ```{r, echo = FALSE}
 # Summary of conditions used
 cat("Calculation Type: ", params$calculation_type, "\n\n")
