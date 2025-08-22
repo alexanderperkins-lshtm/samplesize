@@ -7,6 +7,12 @@ params:
   conditions: NULL
   calculation_type: NULL
 ---
+## Report Overview
+This report summarises sample sizes for a cluster randomized controlled trial using a range of assumptions as detailed below.
+
+The sample size and cluster numbers presented are for a two-arm trial.
+
+Contact Alexander.Perkins@LSHTM.ac.uk for questions or comments.
 
 ```{r, echo = FALSE}
 # Summary of conditions used

@@ -37,9 +37,9 @@ ui <- fluidPage(
     ),
 
     mainPanel(
-      h3("Sample Size Table"),
+      h3("Sample Size"),
       tableOutput("sample_size_table"),
-      h3("Number of Clusters Table"),
+      h3("Number of Clusters"),
       tableOutput("cluster_table"),
       downloadButton("download_report", "Download Report")
     )
@@ -76,7 +76,7 @@ server <- function(input, output) {
     for (i in seq_along(effect_sizes)) {
       for (j in seq_along(event_rates)) {
         base_sample_size <- 2 * calculate_sample_size(effect_sizes[i], event_rates[j], input$cluster_size_cat, input$icc_cat, input$alpha_cat, input$power_cat)
-        adjusted_sample_size <- ceiling(base_sample_size * (1 + input$loss_cat / 100))
+        adjusted_sample_size <- ceiling(base_sample_size / (1 - input$loss_cat / 100))
         sample_size_table[i, j] <- adjusted_sample_size
         cluster_table[i, j] <- ceiling(adjusted_sample_size / input$cluster_size_cat)
       }
@@ -141,7 +141,7 @@ server <- function(input, output) {
     for (i in seq_along(mean_diffs)) {
       for (j in seq_along(sds)) {
         base_sample_size <- 2 * calculate_sample_size_continuous(mean_diffs[i], sds[j], input$cluster_size_cont, input$icc_cont, input$alpha_cont, input$power_cont)
-        adjusted_sample_size <- ceiling(base_sample_size * (1 + input$loss_cont / 100))
+        adjusted_sample_size <- ceiling(base_sample_size / (1 - input$loss_cont / 100))
         sample_size_table[i, j] <- adjusted_sample_size
         cluster_table[i, j] <- ceiling(adjusted_sample_size / input$cluster_size_cont)
       }
