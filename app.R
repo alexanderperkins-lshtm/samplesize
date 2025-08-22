@@ -7,7 +7,7 @@ ui <- fluidPage(
   div(
     p("This application calculates a range of sample sizes for proportional (based on effect size and event rate) or continuous (based on mean difference and standard deviation) variables for a cluster RCT. For ease, it also calculates the corresponding number of clusters required.
 
-    The output shows the total sample size for a two-arm trial and includes the loss to follow-up and clustering adjustments.")
+    The output shows the total sample size for a two-arm trial and includes the loss to follow-up and clustering adjustments. For questions or comments, please contact Alexander.Perkins@LSHTM.ac.uk.")
   ),
 
   sidebarLayout(
