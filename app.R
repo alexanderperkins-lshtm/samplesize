@@ -5,7 +5,7 @@ library(rmarkdown)
 ui <- fluidPage(
   titlePanel("Sample Size Calculation for Cluster RCTs"),
   div(
-    p("This application calculates a range of sample sizes for proportional (based on effect size and event rate) or continuous (based on mean difference and standard deviation) variables for a cluster RCT. For ease, it also calculates the corresponding number of clusters required.
+    p("This application calculates a range of sample sizes for proportional (based on effect size and event rate) or continuous (based on mean difference and standard deviation) outcomes for a cluster RCT. For ease, it also calculates the corresponding number of clusters required.
 
     The output shows the total sample size for a two-arm trial and includes the loss to follow-up and clustering adjustments. For questions or comments, please contact Alexander.Perkins@LSHTM.ac.uk.")
   ),
@@ -13,7 +13,7 @@ ui <- fluidPage(
   sidebarLayout(
     sidebarPanel(
       tabsetPanel(
-        tabPanel("Categorical Proportions",
+        tabPanel("Proportional Outcome",
           textInput("effect_sizes", "Enter range of effect sizes (e.g., 0.1,0.5):", "0.1,0.5"),
           textInput("event_rates", "Enter range of standard event rates (e.g., 0.1,0.5):", "0.1,0.5"),
           numericInput("cluster_size_cat", "Enter cluster size:", value = 10, min = 1),
@@ -23,7 +23,7 @@ ui <- fluidPage(
           numericInput("loss_cat", "Enter expected loss to follow-up (%):", value = 10, min = 0, max = 100),
           actionButton("calculate_cat", "Calculate")
         ),
-        tabPanel("Continuous Variables",
+        tabPanel("Continuous Outcome",
           textInput("mean_diff_range", "Enter range of mean differences (e.g., 5,10):", "5,10"),
           textInput("sd_range", "Enter range of standard deviations (e.g., 10,15):", "10,15"),
           numericInput("cluster_size_cont", "Enter cluster size:", value = 10, min = 1),
