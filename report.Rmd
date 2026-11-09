@@ -1,34 +1,67 @@
 ---
-title: "Sample Size Report"
-output: html_document
+title: "Sample Size Calculation Report"
+date: "`r format(Sys.Date(), '%d %B %Y')`"
+output: 
+  html_document:
+    theme: zephyr
+    toc: false
 params:
   sample_size_table: NULL
   cluster_table: NULL
   conditions: NULL
   calculation_type: NULL
 ---
+
+```{r setup, include=FALSE}
+# Ensure knitr is loaded for table rendering
+library(knitr)
+```
+
 ## Report Overview
-This report summarises sample sizes for a cluster randomized controlled trial using a range of assumptions as detailed below.
 
-The sample size and cluster numbers presented are for a two-arm trial.
+This report summarises the estimated sample sizes and cluster requirements for a **two-arm cluster randomised controlled trial**, based on the specific assumptions and parameters detailed below.
 
-Contact Alexander.Perkins@LSHTM.ac.uk for questions or comments.
+> **Disclaimer:** Figures are advisory and should be independently verified by a qualified statistician before use in trial protocols or grant applications. No responsibility is taken for their use. For questions or comments, please contact [Alexander.Perkins@LSHTM.ac.uk](mailto:Alexander.Perkins@LSHTM.ac.uk).
 
-Figures are advisory and should be checked with a qualified statistician before use. No responsibility is taken for their use.
+---
 
-```{r, echo = FALSE}
-# Summary of conditions used
-cat("Calculation Type: ", params$calculation_type, "\n\n")
-cat("User Entered Variables:\n")
-for (condition in names(params$conditions)) {
-  cat(condition, ":", params$conditions[[condition]], "\n")
-}
+### Trial Parameters
 
-# Sample Size Table
-cat("\nSample Size Table:\n")
-print(params$sample_size_table)
+**Outcome Type:** `r params$calculation_type`
 
-# Cluster Table
-cat("\nCluster Table:\n")
-print(params$cluster_table)
+```{r parameters, echo=FALSE}
+# Convert the parameters list into a neat two-column table
+cond_df <- data.frame(
+  Parameter = names(params$conditions),
+  Value = as.character(unlist(params$conditions, use.names = FALSE))
+)
+
+kable(cond_df, 
+      format = "html", 
+      table.attr = "class='table table-striped table-hover'", 
+      row.names = FALSE)
+```
+
+---
+
+### Total Sample Size (Adjusted)
+
+This table displays the realistic recruited sample size required across both arms, accounting for the cluster size, design effect (ICC), and expected loss to follow-up. 
+
+```{r sample_size_table, echo=FALSE}
+kable(params$sample_size_table, 
+      format = "html", 
+      table.attr = "class='table table-bordered table-hover'")
+```
+
+---
+
+### Total Number of Clusters
+
+This table displays the total number of clusters required across both arms (ensuring 1:1 allocation balance).
+
+```{r cluster_table, echo=FALSE}
+kable(params$cluster_table, 
+      format = "html", 
+      table.attr = "class='table table-bordered table-hover'")
 ```

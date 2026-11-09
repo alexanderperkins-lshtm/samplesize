@@ -1,197 +1,182 @@
 library(shiny)
+library(bslib)
 library(rmarkdown)
 
-# Define UI for the app
-ui <- fluidPage(
-  titlePanel("Sample Size Calculation for Cluster RCTs"),
-  div(
-    p("This application calculates a range of sample sizes for proportional (based on effect size and event rate) or continuous (based on mean difference and standard deviation) outcomes for a cluster RCT. For ease, it also calculates the corresponding number of clusters required.
-
-    The output shows the total sample size for a two-arm trial and includes the loss to follow-up and clustering adjustments. For questions or comments, please contact Alexander.Perkins@LSHTM.ac.uk. Figures are advisory and should be checked with a qualified statistician before use. No responsibility is taken for their use.")
-  ),
-
-  sidebarLayout(
-    sidebarPanel(
-      tabsetPanel(
-        tabPanel("Proportional Outcome",
-          textInput("effect_sizes", "Enter range of effect sizes (e.g., 0.1,0.5):", "0.1,0.5"),
-          textInput("event_rates", "Enter range of standard event rates (e.g., 0.1,0.5):", "0.1,0.5"),
-          numericInput("cluster_size_cat", "Enter cluster size:", value = 10, min = 1),
-          numericInput("icc_cat", "Enter intra-cluster correlation coefficient (ICC):", value = 0.01, min = 0, max = 1),
-          numericInput("alpha_cat", "Enter significance level (alpha):", value = 0.05, min = 0, max = 1),
-          numericInput("power_cat", "Enter power (1-beta):", value = 0.8, min = 0, max = 1),
-          numericInput("loss_cat", "Enter expected loss to follow-up (%):", value = 10, min = 0, max = 100),
-          actionButton("calculate_cat", "Calculate")
-        ),
-        tabPanel("Continuous Outcome",
-          textInput("mean_diff_range", "Enter range of mean differences (e.g., 5,10):", "5,10"),
-          textInput("sd_range", "Enter range of standard deviations (e.g., 10,15):", "10,15"),
-          numericInput("cluster_size_cont", "Enter cluster size:", value = 10, min = 1),
-          numericInput("icc_cont", "Enter intra-cluster correlation coefficient (ICC):", value = 0.05, min = 0, max = 1),
-          numericInput("alpha_cont", "Enter significance level (alpha):", value = 0.05, min = 0, max = 1),
-          numericInput("power_cont", "Enter power (1-beta):", value = 0.8, min = 0, max = 1),
-          numericInput("loss_cont", "Enter expected loss to follow-up (%):", value = 10, min = 0, max = 100),
-          actionButton("calculate_cont", "Calculate")
-        )
+# 1. Modernized UI using bslib
+ui <- page_sidebar(
+  title = "Sample Size Calculation for Cluster RCTs",
+  theme = bs_theme(version = 5, bootswatch = "zephyr"),
+  
+  sidebar = sidebar(
+    width = 350,
+    tabsetPanel(
+      id = "calc_tabs",
+      
+      tabPanel("Proportional",
+               br(),
+               textInput("effect_sizes", "Effect sizes (comma-separated):", "0.1, 0.5"),
+               textInput("event_rates", "Standard event rates (comma-separated):", "0.1, 0.5"),
+               numericInput("cluster_size_cat", "Cluster size:", value = 10, min = 1),
+               numericInput("icc_cat", "Intra-cluster correlation (ICC):", value = 0.01, min = 0, max = 1, step = 0.01),
+               numericInput("alpha_cat", "Significance level (alpha):", value = 0.05, min = 0, max = 1, step = 0.01),
+               numericInput("power_cat", "Power (1-beta):", value = 0.8, min = 0, max = 1, step = 0.05),
+               numericInput("loss_cat", "Expected loss to follow-up (%):", value = 10, min = 0, max = 100),
+               actionButton("calculate_cat", "Calculate", class = "btn-primary w-100")
+      ),
+      
+      tabPanel("Continuous",
+               br(),
+               textInput("mean_diff_range", "Mean differences (comma-separated):", "5, 10"),
+               textInput("sd_range", "Standard deviations (comma-separated):", "10, 15"),
+               numericInput("cluster_size_cont", "Cluster size:", value = 10, min = 1),
+               numericInput("icc_cont", "Intra-cluster correlation (ICC):", value = 0.05, min = 0, max = 1, step = 0.01),
+               numericInput("alpha_cont", "Significance level (alpha):", value = 0.05, min = 0, max = 1, step = 0.01),
+               numericInput("power_cont", "Power (1-beta):", value = 0.8, min = 0, max = 1, step = 0.05),
+               numericInput("loss_cont", "Expected loss to follow-up (%):", value = 10, min = 0, max = 100),
+               actionButton("calculate_cont", "Calculate", class = "btn-primary w-100")
       )
-    ),
-
-    mainPanel(
-      h3("Sample Size"),
-      tableOutput("sample_size_table"),
-      h3("Number of Clusters"),
-      tableOutput("cluster_table"),
-      downloadButton("download_report", "Download Report")
     )
-  )
+  ),
+  
+  # Introduction text
+  card(
+    card_body(
+      p("This application calculates a range of sample sizes for proportional or continuous outcomes for a cluster RCT. It also calculates the corresponding number of clusters required."),
+      p("The output shows the total sample size for a two-arm trial and includes the loss to follow-up and clustering adjustments. For questions or comments, please contact Alexander.Perkins@LSHTM.ac.uk. Figures are advisory and should be checked with a qualified statistician before use. No responsibility is taken for their use.")
+    )
+  ),
+  
+  # Results cards
+  layout_columns(
+    col_widths = c(6, 6),
+    card(
+      card_header("Total Sample Size (Adjusted)"),
+      tableOutput("sample_size_table")
+    ),
+    card(
+      card_header("Total Number of Clusters"),
+      tableOutput("cluster_table")
+    )
+  ),
+  
+  uiOutput("download_ui")
 )
 
-# Define server logic
-server <- function(input, output) {
-  calculate_sample_size <- function(effect_size, event_rate, cluster_size, icc, alpha, power) {
-    design_effect <- 1 + (cluster_size - 1) * icc
-    result <- power.prop.test(p1 = event_rate, p2 = event_rate + effect_size, sig.level = alpha, power = power)
-    adjusted_sample_size <- ceiling(result$n * design_effect)
-    return(adjusted_sample_size)
-  }
 
-  calculate_sample_size_continuous <- function(mean_diff, sd, cluster_size, icc, alpha, power) {
-    design_effect <- 1 + (cluster_size - 1) * icc
-    result <- power.t.test(delta = mean_diff, sd = sd, sig.level = alpha, power = power, type = "two.sample")
-    adjusted_sample_size <- ceiling(result$n * design_effect)
-    return(adjusted_sample_size)
+# 2. Refactored Server Logic
+server <- function(input, output, session) {
+  
+  # Centralized reactive values to hold state
+  res <- reactiveValues(
+    sample_table = NULL,
+    cluster_table = NULL,
+    conditions = NULL,
+    type = NULL
+  )
+  
+  # Helper: Parse comma-separated inputs safely
+  parse_inputs <- function(text_input) {
+    as.numeric(trimws(unlist(strsplit(text_input, ","))))
   }
-
+  
+  # Vectorized calculation functions
+  calc_prop <- Vectorize(function(eff, rate, m, icc, alpha, pwr, loss) {
+    de <- 1 + (m - 1) * icc
+    n_per_arm_ind <- power.prop.test(p1 = rate, p2 = rate + eff, sig.level = alpha, power = pwr)$n
+    n_per_arm_adj <- (n_per_arm_ind * de) / (1 - loss / 100)
+    
+    clusters_per_arm <- ceiling(n_per_arm_adj / m)
+    total_clusters <- clusters_per_arm * 2
+    total_n <- total_clusters * m 
+    
+    c(total_n, total_clusters)
+  })
+  
+  calc_cont <- Vectorize(function(diff, sd, m, icc, alpha, pwr, loss) {
+    de <- 1 + (m - 1) * icc
+    n_per_arm_ind <- power.t.test(delta = diff, sd = sd, sig.level = alpha, power = pwr, type = "two.sample")$n
+    n_per_arm_adj <- (n_per_arm_ind * de) / (1 - loss / 100)
+    
+    clusters_per_arm <- ceiling(n_per_arm_adj / m)
+    total_clusters <- clusters_per_arm * 2
+    total_n <- total_clusters * m
+    
+    c(total_n, total_clusters)
+  })
+  
+  # Proportional Trigger
   observeEvent(input$calculate_cat, {
-    effect_sizes <- as.numeric(unlist(strsplit(input$effect_sizes, ",")))
-    event_rates <- as.numeric(unlist(strsplit(input$event_rates, ",")))
-
-    sample_size_table <- matrix(nrow = length(effect_sizes), ncol = length(event_rates))
-    cluster_table <- matrix(nrow = length(effect_sizes), ncol = length(event_rates))
-    rownames(sample_size_table) <- paste("Effect Size:", effect_sizes)
-    colnames(sample_size_table) <- paste("Event Rate:", event_rates)
-    rownames(cluster_table) <- paste("Effect Size:", effect_sizes)
-    colnames(cluster_table) <- paste("Event Rate:", event_rates)
-
-    for (i in seq_along(effect_sizes)) {
-      for (j in seq_along(event_rates)) {
-        base_sample_size <- 2 * calculate_sample_size(effect_sizes[i], event_rates[j], input$cluster_size_cat, input$icc_cat, input$alpha_cat, input$power_cat)
-        adjusted_sample_size <- ceiling(base_sample_size / (1 - input$loss_cat / 100))
-        sample_size_table[i, j] <- as.integer(adjusted_sample_size)
-        cluster_table[i, j] <- as.integer(adjusted_sample_size / input$cluster_size_cat)
-      }
-    }
-
-    output$sample_size_table <- renderTable({
-      sample_size_table
-    }, rownames = TRUE)
-
-    output$cluster_table <- renderTable({
-      cluster_table
-    }, rownames = TRUE)
-
-    output$download_report <- downloadHandler(
-      filename = function() {
-        paste("sample_size_report", Sys.Date(), ".html", sep = "")
-      },
-      content = function(file) {
-        conditions <- if (input$calculate_cat > 0) {
-          list(
-            "Effect Sizes" = input$effect_sizes,
-            "Event Rates" = input$event_rates,
-            "Cluster Size" = input$cluster_size_cat,
-            "Intra-cluster Correlation Coefficient (ICC)" = input$icc_cat,
-            "Significance Level (Alpha)" = input$alpha_cat,
-            "Power (1-Beta)" = input$power_cat,
-            "Loss to Follow-up (%)" = input$loss_cat
-          )
-        } else {
-          list(
-            "Mean Difference Range" = input$mean_diff_range,
-            "Standard Deviation Range" = input$sd_range,
-            "Cluster Size" = input$cluster_size_cont,
-            "Intra-cluster Correlation Coefficient (ICC)" = input$icc_cont,
-            "Significance Level (Alpha)" = input$alpha_cont,
-            "Power (1-Beta)" = input$power_cont,
-            "Loss to Follow-up (%)" = input$loss_cont
-          )
-        }
-
-        rmarkdown::render("report.Rmd", output_file = file, output_format = "html_document", params = list(
-          sample_size_table = sample_size_table,
-          cluster_table = cluster_table,
-          conditions = conditions,
-          calculation_type = if (input$calculate_cat > 0) "Proportional" else "Continuous"
-        ))
-      }
+    effs <- parse_inputs(input$effect_sizes)
+    rates <- parse_inputs(input$event_rates)
+    
+    grid <- outer(effs, rates, function(e, r) calc_prop(e, r, input$cluster_size_cat, input$icc_cat, input$alpha_cat, input$power_cat, input$loss_cat))
+    
+    # Extract matrices from the 3D array returned by outer + Vectorize
+    res$sample_table <- matrix(grid[1,,], nrow = length(effs), dimnames = list(paste("Effect:", effs), paste("Rate:", rates)))
+    res$cluster_table <- matrix(grid[2,,], nrow = length(effs), dimnames = list(paste("Effect:", effs), paste("Rate:", rates)))
+    
+    res$type <- "Proportional"
+    res$conditions <- list(
+      "Effect Sizes" = input$effect_sizes,
+      "Event Rates" = input$event_rates,
+      "Cluster Size" = input$cluster_size_cat,
+      "ICC" = input$icc_cat,
+      "Alpha" = input$alpha_cat,
+      "Power" = input$power_cat,
+      "Loss to Follow-up (%)" = input$loss_cat
     )
   })
-
+  
+  # Continuous Trigger
   observeEvent(input$calculate_cont, {
-    mean_diffs <- as.numeric(unlist(strsplit(input$mean_diff_range, ",")))
-    sds <- as.numeric(unlist(strsplit(input$sd_range, ",")))
-
-    sample_size_table <- matrix(nrow = length(mean_diffs), ncol = length(sds))
-    cluster_table <- matrix(nrow = length(mean_diffs), ncol = length(sds))
-    rownames(sample_size_table) <- paste("Mean Difference:", mean_diffs)
-    colnames(sample_size_table) <- paste("SD:", sds)
-    rownames(cluster_table) <- paste("Mean Difference:", mean_diffs)
-    colnames(cluster_table) <- paste("SD:", sds)
-
-    for (i in seq_along(mean_diffs)) {
-      for (j in seq_along(sds)) {
-        base_sample_size <- 2 * calculate_sample_size_continuous(mean_diffs[i], sds[j], input$cluster_size_cont, input$icc_cont, input$alpha_cont, input$power_cont)
-        adjusted_sample_size <- ceiling(base_sample_size / (1 - input$loss_cont / 100))
-        sample_size_table[i, j] <- as.integer(adjusted_sample_size)
-        cluster_table[i, j] <- as.integer(adjusted_sample_size / input$cluster_size_cont)
-      }
-    }
-
-    output$sample_size_table <- renderTable({
-      sample_size_table
-    }, rownames = TRUE)
-
-    output$cluster_table <- renderTable({
-      cluster_table
-    }, rownames = TRUE)
-
-    output$download_report <- downloadHandler(
-      filename = function() {
-        paste("sample_size_report", Sys.Date(), ".html", sep = "")
-      },
-      content = function(file) {
-        conditions <- if (input$calculate_cat > 0) {
-          list(
-            "Effect Sizes" = input$effect_sizes,
-            "Event Rates" = input$event_rates,
-            "Cluster Size" = input$cluster_size_cat,
-            "Intra-cluster Correlation Coefficient (ICC)" = input$icc_cat,
-            "Significance Level (Alpha)" = input$alpha_cat,
-            "Power (1-Beta)" = input$power_cat,
-            "Loss to Follow-up (%)" = input$loss_cat
-          )
-        } else {
-          list(
-            "Mean Difference Range" = input$mean_diff_range,
-            "Standard Deviation Range" = input$sd_range,
-            "Cluster Size" = input$cluster_size_cont,
-            "Intra-cluster Correlation Coefficient (ICC)" = input$icc_cont,
-            "Significance Level (Alpha)" = input$alpha_cont,
-            "Power (1-Beta)" = input$power_cont,
-            "Loss to Follow-up (%)" = input$loss_cont
-          )
-        }
-
-        rmarkdown::render("report.Rmd", output_file = file, output_format = "html_document", params = list(
-          sample_size_table = sample_size_table,
-          cluster_table = cluster_table,
-          conditions = conditions,
-          calculation_type = if (input$calculate_cat > 0) "Proportional" else "Continuous"
-        ))
-      }
+    diffs <- parse_inputs(input$mean_diff_range)
+    sds <- parse_inputs(input$sd_range)
+    
+    grid <- outer(diffs, sds, function(d, s) calc_cont(d, s, input$cluster_size_cont, input$icc_cont, input$alpha_cont, input$power_cont, input$loss_cont))
+    
+    res$sample_table <- matrix(grid[1,,], nrow = length(diffs), dimnames = list(paste("Diff:", diffs), paste("SD:", sds)))
+    res$cluster_table <- matrix(grid[2,,], nrow = length(diffs), dimnames = list(paste("Diff:", diffs), paste("SD:", sds)))
+    
+    res$type <- "Continuous"
+    res$conditions <- list(
+      "Mean Differences" = input$mean_diff_range,
+      "Standard Deviations" = input$sd_range,
+      "Cluster Size" = input$cluster_size_cont,
+      "ICC" = input$icc_cont,
+      "Alpha" = input$alpha_cont,
+      "Power" = input$power_cont,
+      "Loss to Follow-up (%)" = input$loss_cont
     )
   })
+  
+  # Render Tables (only when data exists)
+  output$sample_size_table <- renderTable({ req(res$sample_table); res$sample_table }, rownames = TRUE, digits = 0)
+  output$cluster_table <- renderTable({ req(res$cluster_table); res$cluster_table }, rownames = TRUE, digits = 0)
+  
+  # Render Download Button conditionally
+  output$download_ui <- renderUI({
+    req(res$sample_table)
+    div(class = "d-flex justify-content-end",
+        downloadButton("download_report", "Download Report", class = "btn-success")
+    )
+  })
+  
+  # Extracted top-level download handler
+  output$download_report <- downloadHandler(
+    filename = function() { paste0("sample_size_report_", Sys.Date(), ".html") },
+    content = function(file) {
+      req(res$sample_table)
+      rmarkdown::render("report.Rmd", 
+                        output_file = file, 
+                        output_format = "html_document", 
+                        params = list(
+                          sample_size_table = res$sample_table,
+                          cluster_table = res$cluster_table,
+                          conditions = res$conditions,
+                          calculation_type = res$type
+                        ))
+    }
+  )
 }
 
-# Run the application
 shinyApp(ui = ui, server = server)
