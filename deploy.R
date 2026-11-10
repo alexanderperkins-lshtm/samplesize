@@ -1,2 +1,6 @@
 # Deploy to shinyapps.io
-rsconnect::deployApp(appDir = ".", appPrimaryDoc = "app.R")
+rsconnect::deployApp(
+  appDir = ".", 
+  appName = "samplesize",
+  appPrimaryDoc = "app.R"
+)

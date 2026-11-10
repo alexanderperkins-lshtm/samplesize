@@ -1,67 +1,62 @@
 ---
-title: "Sample Size Calculation Report"
+title: "`r params$study_name` - Sample Size Report"
 date: "`r format(Sys.Date(), '%d %B %Y')`"
-output: 
-  html_document:
-    theme: zephyr
-    toc: false
+output: pdf_document
 params:
+  study_name: NULL
+  study_notes: NULL
   sample_size_table: NULL
   cluster_table: NULL
   conditions: NULL
-  calculation_type: NULL
+  trial_type: NULL
+  outcome_type: NULL
 ---
 
 ```{r setup, include=FALSE}
-# Ensure knitr is loaded for table rendering
 library(knitr)
 ```
 
 ## Report Overview
 
-This report summarises the estimated sample sizes and cluster requirements for a **two-arm cluster randomised controlled trial**, based on the specific assumptions and parameters detailed below.
+This report summarises the estimated sample sizes for a **two-arm `r tolower(params$trial_type)` randomised controlled trial**, based on the specific assumptions detailed below. 
 
-> **Disclaimer:** Figures are advisory and should be independently verified by a qualified statistician before use in trial protocols or grant applications. No responsibility is taken for their use. For questions or comments, please contact [Alexander.Perkins@LSHTM.ac.uk](mailto:Alexander.Perkins@LSHTM.ac.uk).
+> *Disclaimer: Figures are advisory and should be independently verified by a qualified statistician before use in trial protocols or grant applications. For questions, contact Alexander.Perkins@LSHTM.ac.uk.*
 
 ---
 
+```{r notes_cond, echo=FALSE, results='asis'}
+# Conditionally render the notes section if the user provided text
+if (!is.null(params$study_notes) && nchar(trimws(params$study_notes)) > 0) {
+  cat("### Study Notes\n\n", params$study_notes, "\n\n---\n\n")
+}
+```
+
 ### Trial Parameters
 
-**Outcome Type:** `r params$calculation_type`
+**Trial Design:** `r params$trial_type` RCT  
+**Outcome Type:** `r params$outcome_type`
 
 ```{r parameters, echo=FALSE}
-# Convert the parameters list into a neat two-column table
 cond_df <- data.frame(
   Parameter = names(params$conditions),
   Value = as.character(unlist(params$conditions, use.names = FALSE))
 )
-
-kable(cond_df, 
-      format = "html", 
-      table.attr = "class='table table-striped table-hover'", 
-      row.names = FALSE)
+kable(cond_df, row.names = FALSE)
 ```
 
 ---
 
 ### Total Sample Size (Adjusted)
 
-This table displays the realistic recruited sample size required across both arms, accounting for the cluster size, design effect (ICC), and expected loss to follow-up. 
+This table displays the realistic recruited sample size required across both arms, accounting for your specified parameters and expected loss to follow-up. 
 
 ```{r sample_size_table, echo=FALSE}
-kable(params$sample_size_table, 
-      format = "html", 
-      table.attr = "class='table table-bordered table-hover'")
+kable(params$sample_size_table)
 ```
 
----
-
-### Total Number of Clusters
-
-This table displays the total number of clusters required across both arms (ensuring 1:1 allocation balance).
-
-```{r cluster_table, echo=FALSE}
-kable(params$cluster_table, 
-      format = "html", 
-      table.attr = "class='table table-bordered table-hover'")
+```{r cluster_table_cond, echo=FALSE, results='asis'}
+if (params$trial_type == "Cluster") {
+  cat("---\n\n### Total Number of Clusters\n\nThis table displays the total number of clusters required across both arms (ensuring 1:1 allocation balance).\n\n")
+  print(kable(params$cluster_table))
+}
 ```
